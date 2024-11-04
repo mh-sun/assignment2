@@ -1,1 +1,4 @@
 *.csv
+repos
+fine_tuned_codellama
+wandb

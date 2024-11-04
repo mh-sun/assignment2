@@ -101,11 +101,12 @@ def cut_condition(input_path, output_path):
 
 
 if __name__ == "__main__":
-    dataset = "dataset/generated.csv"
-    filtered_dataset = "dataset/filtered_dataset.csv"
-    processed_dataset = "dataset/python_methods.csv"
-    flattened_dataset = "dataset/flatten_dataset.csv"
-    cut_condition_dataset = "dataset/cut_condition_dataset.csv"
+    dataset = "dataset/generated-testset.csv"
+
+    filtered_dataset = "dataset/generated/filtered_dataset.csv"
+    processed_dataset = "dataset/generated/python_methods.csv"
+    flattened_dataset = "dataset/generated/flatten_dataset.csv"
+    cut_condition_dataset = "dataset/generated/cut_condition_dataset.csv"
 
     filter_dataset(dataset, filtered_dataset)
     prepare_dataset(filtered_dataset, processed_dataset)

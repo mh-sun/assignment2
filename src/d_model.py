@@ -7,11 +7,11 @@ from peft import LoraConfig, get_peft_model
 from datasets import load_dataset
 from sklearn.model_selection import train_test_split
 import wandb
+import evaluate
 
 os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
-# Initialize W&B
 wandb.init(project="code-generation-fill-in", name="finetune-codellama")
 
 def data_split(src_dataset, train_set, val_set, test_set, train_ratio=0.7, val_ratio=0.15, test_ratio=0.15):
@@ -19,6 +19,8 @@ def data_split(src_dataset, train_set, val_set, test_set, train_ratio=0.7, val_r
 
     try:
         data = data.dropna()
+
+        data = data[["masked_method", "condition_line"]]
 
         sample_size = min(50000, len(data))
         data = data.sample(sample_size, random_state=42)
@@ -36,8 +38,8 @@ def data_split(src_dataset, train_set, val_set, test_set, train_ratio=0.7, val_r
 
     # Save the DataFrames to CSV files
     train_data.to_csv(train_set, index=False)
-    val_data.sample(500).to_csv(val_set, index=False)
-    test_data.sample(500).to_csv(test_set, index=False)
+    val_data.to_csv(val_set, index=False)
+    test_data.to_csv(test_set, index=False)
 
     # Print lengths and confirmation messages
     print(f"Data split completed:\n- Training set saved to {train_set} (Length: {train_length})\n- Validation set saved to {val_set} (Length: {val_length})\n- Test set saved to {test_set} (Length: {test_length})")
@@ -56,6 +58,18 @@ def fine_tune_model(train_file, val_file, test_file, model_name="codellama/CodeL
         lora_dropout=0.1
     )
     model = get_peft_model(model, peft_config)
+
+    bleu_metric = evaluate.load("bleu")
+    def compute_metrics(eval_pred):
+        logits, labels = eval_pred
+        predictions = logits.argmax(-1)
+        decoded_preds = tokenizer.batch_decode(predictions, skip_special_tokens=True)
+        decoded_labels = tokenizer.batch_decode(labels, skip_special_tokens=True)
+        
+        exact_match = sum([pred == label for pred, label in zip(decoded_preds, decoded_labels)]) / len(decoded_labels)
+        bleu = bleu_metric.compute(predictions=decoded_preds, references=decoded_labels)["bleu"]
+        
+        return {"exact_match": exact_match, "bleu": bleu}
     
     def tokenize_function(examples):
         inputs = examples["masked_method"]
@@ -98,6 +112,7 @@ def fine_tune_model(train_file, val_file, test_file, model_name="codellama/CodeL
         train_dataset=tokenized_datasets["train"],
         eval_dataset=tokenized_datasets["validation"],
         tokenizer=tokenizer,
+        compute_metrics=compute_metrics
     )
     
     # Train model
@@ -116,13 +131,15 @@ def fine_tune_model(train_file, val_file, test_file, model_name="codellama/CodeL
 
 if __name__ == "__main__":
     # Define file paths
-    src_dataset = "dataset/flatten_dataset.csv"
-    train_set = "dataset/train_dataset.csv"
-    val_set = "dataset/val_dataset.csv"
-    test_set = "dataset/test_dataset.csv"
+    src_dataset = "dataset/generated/flatten_dataset.csv"
+    train_set = "dataset/generated/train_dataset.csv"
+    val_set = "dataset/generated/val_dataset.csv"
+    test_set = "dataset/generated/test_dataset.csv"
     
     # Split data
     data_split(src_dataset, train_set, val_set, test_set)
     
     # Fine-tune model and log in W&B
     fine_tune_model(train_file=train_set, val_file=val_set, test_file=test_set)
+
+    
