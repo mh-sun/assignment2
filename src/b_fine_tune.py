@@ -61,14 +61,14 @@ def tokenize_function(examples):
         input_texts, 
         padding="max_length", 
         truncation=True, 
-        max_length=128
+        max_length=64
     )
 
     labels = tokenizer(
         target_texts, 
         padding="max_length", 
         truncation=True, 
-        max_length=128
+        max_length=64
     )["input_ids"]
 
     labels = [
@@ -102,7 +102,6 @@ def generate_prediction(path, test_dataset, args):
             attention_mask=tokenized_inputs.attention_mask,
             max_length=128,
             num_return_sequences=1,
-            temperature=0.7,
             output_scores=True,
             return_dict_in_generate=True
         )
@@ -161,6 +160,9 @@ def train_model(dataset, args):
     valid_dataset = train_test_split['train']
     test_dataset = train_test_split['test']
 
+    valid_dataset = valid_dataset.shuffle(seed=42).select(range(min(1000, len(valid_dataset))))
+    test_dataset = test_dataset.shuffle(seed=42).select(range(min(1000, len(test_dataset))))
+
     print(train_dataset)
     print(valid_dataset)
     print(test_dataset)
@@ -203,11 +205,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    dataset = get_dataset(":10%")
+    dataset = get_dataset("10%:20%")
     dataset = filter_dataset(dataset)
     dataset = mask_if_condition(dataset)
 
     train_model(dataset, args)
 
     wandb.finish()
-
