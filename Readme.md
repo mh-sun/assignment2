@@ -48,4 +48,4 @@ arguments:
  - '-o', '--out' : Test Result Path
 
 ## Data
-The data we've collected from SEART, that data is available here [link](https://drive.google.com/drive/folders/100X2rtYo3oV4Rt9cPjkDi3z2hU9_csr7?usp=sharing) and our model is available: [link]([https://drive.google.com/drive/folders/100X2rtYo3oV4Rt9cPjkDi3z2hU9_csr7?usp=sharing](https://drive.google.com/drive/folders/1nPAh0l4rFAgXsQsad_D096EVVKozLuA2?usp=sharing))
+The data we've collected from SEART, that data is available here [link](https://drive.google.com/drive/folders/100X2rtYo3oV4Rt9cPjkDi3z2hU9_csr7?usp=sharing) and our model is available: [link](https://drive.google.com/drive/folders/1nPAh0l4rFAgXsQsad_D096EVVKozLuA2?usp=sharing)
