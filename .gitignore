@@ -3,3 +3,9 @@ repos
 fine_tuned_codellama
 wandb
 models
+log
+model-codet5
+outputs
+fine_tuned_model
+results
+*.pyc

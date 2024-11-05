@@ -18,53 +18,6 @@ torch.cuda.empty_cache()
 os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3"
 os.environ['PYTORCH_CUDA_ALLOC_CONF'] = 'expandable_segments:True'
 
-def remove_columns(dataset):
-    data = dataset.to_pandas()
-    data = data[['func_code_string', 'func_code_tokens']]
-    print("Column Removed")
-
-    return Dataset.from_pandas(data)
-
-def remove_comment(dataset):
-    data = dataset.to_pandas()
-
-    single_line_comment_pattern = r"#.*"
-    multi_line_comment_pattern = r'(?:(?:r|R)?("""|\'\'\')).*?\1'
-    
-    def remove_comments(code):
-        code_no_multiline = re.sub(multi_line_comment_pattern, '', code, flags=re.DOTALL)
-        code_no_comments = re.sub(single_line_comment_pattern, '', code_no_multiline)
-        return code_no_comments.strip()
-    
-    data['cleaned_method'] = data['func_code_string'].apply(remove_comments)
-
-    print("Comments, Doctring Removed")
-
-    return Dataset.from_pandas(data)
-
-def filter_dataset(dataset):
-    # Remove Unnecessary Columns
-    dataset = remove_columns(dataset)
-    
-    # Remove Test Method
-    dataset = remove_test_method(dataset)
-
-    # Remove Docstring or Comments(Multiple Line or Single Line)
-    dataset = remove_comment(dataset)
-
-    return dataset
-
-def remove_test_method(dataset):
-    data = dataset.to_pandas()
-
-    pattern = r"^\s*def\s*test.*"
-
-    filtered_data = data[~data['func_code_string'].str.match(pattern, na=False)]    
-    removed_rows = len(data) - len(filtered_data)
-
-    print(f"Number of 'test' functions removed: {removed_rows}")
-
-    return Dataset.from_pandas(filtered_data)
 
 def mask_dataset(dataset, mask_rate=0.15, seed=42):
     data = dataset.to_pandas()
@@ -212,13 +165,10 @@ def pretrain_model(dataset, args):
         "predicted_tokens_after": [pred["predicted_tokens"] for pred in post_training_predictions],
     })
 
-    # Save the results to CSV
     path = args.out
     os.makedirs(os.path.dirname(path), exist_ok=True)
     results_df.to_csv(path, index=False)
     print(f"Results saved to {path}")
-
-
 
 model_name = "Salesforce/codet5-base"
 
