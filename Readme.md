@@ -20,7 +20,7 @@ For every research data is very important. In this assignment, we need almost ``
 ```Step 9:``` Repeat this procedure untill the length of the ```csv``` file more than ```200k```\
 ```Step 10:``` Saved the train ```150k``` data as ```train_data.csv``` and test data as ```generated-testset.csv```
 
-## Prerequisites
+# Prerequisites
 
 Before using this script, make sure you have the following installed on your local machine:
 
