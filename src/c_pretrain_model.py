@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 from bert_score import score
 
 MASK_RATE = 0.15
-model_name = "Salesforce/codet5-small"
+model_name = "Salesforce/codet5-base"
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
@@ -18,14 +18,14 @@ model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(device)
 data_path = "dataset/generated/flatten_dataset.csv"
 df = pd.read_csv(data_path)
 texts = df['cleaned_method'].tolist()
-texts = [t.strip('\"') for t in texts if type(t) == str and 3 < len(t) < 1000]
+texts = [t.strip('\"') for t in texts if type(t) == str and len(tokenizer.tokenize(t)) < 500]
 
 texts, test_texts = train_test_split(texts, test_size=0.01, random_state=42)
 test_df = pd.DataFrame({"text": test_texts}).sample(min(100, len(test_texts)), random_state=42)
 
 def mask_text(text, mask_rate=MASK_RATE, seed=42):
     random.seed(seed) 
-    tokens = tokenizer.tokenize(text) #split()
+    tokens = tokenizer.tokenize(text) 
     num_to_mask = max(1, int(len(tokens) * mask_rate))
     mask_indices = random.sample(range(len(tokens)), num_to_mask)
     for i in mask_indices:

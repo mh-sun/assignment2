@@ -101,7 +101,8 @@ def cut_condition(input_path, output_path):
 
 
 if __name__ == "__main__":
-    dataset = "dataset/generated-testset.csv"
+    train_dataset = "dataset/train-data.csv"
+    test_dataset = "dataset/test-data.csv"
 
     filtered_dataset = "dataset/generated/filtered_dataset.csv"
     processed_dataset = "dataset/generated/python_methods.csv"

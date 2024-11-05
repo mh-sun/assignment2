@@ -1,6 +1,7 @@
 from transformers import Trainer, TrainingArguments
 
-# Load the pre-trained model and tokenizer from Hugging Face
+model_path = "models/pretrained_codet5/final_model"
+
 model = T5ForConditionalGeneration.from_pretrained("models/pretrained")
 tokenizer = T5Tokenizer.from_pretrained("t5-small")
 
