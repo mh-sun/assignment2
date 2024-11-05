@@ -1,7 +1,9 @@
 # Training a Transformer model for Predicting if statements
 
 ## Recent updates
+- 🔥 **News**: ``2024/11/2``: The model pre-training done.
 - 🔥 **News**: ``2024/10/31``: The [Dataset](https://drive.google.com/drive/folders/100X2rtYo3oV4Rt9cPjkDi3z2hU9_csr7?usp=sharing) creation has been completed.
+
 
 
 # 📗 Dataset Creation Procedure
@@ -17,3 +19,29 @@ For every research data is very important. In this assignment, we need almost ``
 ```Step 8:``` If any methods contains the ```if``` conditions save that file into ```csv``` file\
 ```Step 9:``` Repeat this procedure untill the length of the ```csv``` file more than ```200k```\
 ```Step 10:``` Saved the train ```150k``` data as ```train_data.csv``` and test data as ```generated-testset.csv```
+
+# Prerequisites
+In order to run this project in your local machine. You have to follow some procedure.
+## Clone the repository
+```bash
+ git clone https://github.com/mh-sun/assignment2.git
+```
+Before using this script, make sure you have the following installed on your local machine:
+
+- Python (3.9 recommended)
+- Required Python libraries (specified in `requirements.txt`)
+
+You can install the required libraries by running:
+
+```bash
+pip install -r requirements.txt
+```
+
+Usage
+To pre-train the model, follow these steps:
+
+Download Pre-trained Model: You'll need a pre-trained codet5 model. 
+You can obtain one from the official codet5 model repository or unofficial sources (ex. HuggingFace etc.)
+
+Prepare Your Dataset: Prepare your dataset for pre-training. Make sure it's organized and formatted correctly.
+
