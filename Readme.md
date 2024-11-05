@@ -10,7 +10,7 @@ In order to run this project in your local machine. You have to follow some proc
 ```
 Before using this script, make sure you have the following installed on your local machine:
 
-- Python (3.10+ recommended)
+- Python (3.10+)
 - Required Python libraries (specified in `requirements.txt`)
 
 You can install the required libraries by running:
@@ -18,6 +18,7 @@ You can install the required libraries by running:
 ```bash
 pip install -r requirements.txt
 ```
+Since we used wandb to track changes, you are required to be logged into wandb. For more details, please refer to (https://docs.wandb.ai/quickstart/)
 
 Model: Code-T5-Base
 
