@@ -21,7 +21,11 @@ For every research data is very important. In this assignment, we need almost ``
 ```Step 10:``` Saved the train ```150k``` data as ```train_data.csv``` and test data as ```generated-testset.csv```
 
 # Prerequisites
-
+In order to run this project in your local machine. You have to follow some procedure.
+## Clone the repository
+```bash
+ git clone https://github.com/mh-sun/assignment2.git
+```
 Before using this script, make sure you have the following installed on your local machine:
 
 - Python (3.9 recommended)
