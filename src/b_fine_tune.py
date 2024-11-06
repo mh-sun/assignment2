@@ -61,14 +61,14 @@ def tokenize_function(examples):
         input_texts, 
         padding="max_length", 
         truncation=True, 
-        max_length=64
+        max_length=128
     )
 
     labels = tokenizer(
         target_texts, 
         padding="max_length", 
         truncation=True, 
-        max_length=64
+        max_length=128
     )["input_ids"]
 
     labels = [
@@ -81,70 +81,60 @@ def tokenize_function(examples):
     return model_inputs
 
 def generate_prediction(path, test_dataset, args):
+    print(f"Evaluatong Test Set Size: {len(test_dataset)}")
     out = args.out
-    device = "cuda" if torch.cuda.is_available() else "cpu"  # Define device
+    device = "cuda" if torch.cuda.is_available() else "cpu"
 
     model = AutoModelForSeq2SeqLM.from_pretrained(path).to(device)
     tokenizer = AutoTokenizer.from_pretrained(path)
     
     test_df = test_dataset.to_pandas()
-    test_inputs = test_df['input_text'].tolist()
-    if_gt = test_df['target_text'].tolist()
 
-    tokenized_inputs = tokenizer(test_inputs, padding=True, truncation=True, return_tensors="pt").to(device)
-    
     model.eval()
+
     results = []
     
-    with torch.no_grad():
-        output_sequences = model.generate(
-            input_ids=tokenized_inputs.input_ids,
-            attention_mask=tokenized_inputs.attention_mask,
-            max_length=128,
-            num_return_sequences=1,
-            output_scores=True,
-            return_dict_in_generate=True
-        )
+    for _, row in tqdm(test_df.iterrows(), desc="Evaluating Test Dataset"):
+        test_input = row['input_text']
+        target = row['target_text']
 
-    # Decode the generated sequences and calculate scores
-    for i, (output, scores) in enumerate(zip(output_sequences.sequences, output_sequences.scores)):
-        decoded_text = tokenizer.decode(output, skip_special_tokens=True)
-        
-        # Calculate token probabilities
+        input_ids = tokenizer(test_input, return_tensors="pt").input_ids.to(device)
+        output_ids = model.generate(input_ids, max_new_tokens=128, output_scores=True, return_dict_in_generate=True)
+
+        output_tokens = output_ids.sequences[0]
+        prediction = tokenizer.decode(output_tokens, skip_special_tokens=True)
+
+        scores = output_ids.scores 
         token_probs = [F.softmax(score, dim=-1) for score in scores]
-        
-        # Extract probabilities of selected tokens
+
         selected_probs = [
-            token_probs[j][token_id].item()  # Use only token_id for indexing
-            for j, token_id in enumerate(output[1:])  # Skip initial token in output
+            token_probs[i][0, token_id].item()
+            for i, token_id in enumerate(output_tokens[1:]) 
         ]
 
-        # Calculate average prediction score
         if selected_probs:
             prediction_score = sum(selected_probs) / len(selected_probs) * 100
         else:
             prediction_score = 0.0
 
-        # Check if the prediction matches the ground truth
-        is_correct = decoded_text.strip() == if_gt[i].strip()
-
-        # Append the result in the specified format
         results.append({
-            "input": test_inputs[i],
-            "prediction_status": is_correct,
-            "ground_truth_if": if_gt[i],
-            "prediction_if": decoded_text,
-            "prediction_score": round(prediction_score, 2)
+            "input": test_input,
+            "predict_condition": target == prediction,
+            "target": target,
+            "prediction": prediction,
+            "prediction_score": prediction_score
         })
 
     # Convert results to a DataFrame and save as a CSV
     results_df = pd.DataFrame(results)
+    print(f"Length of results: {len(results_df)}")
     os.makedirs(os.path.dirname(out), exist_ok=True)
     results_df.to_csv(out, index=False)
     print(f"Results saved to {out}")
 
 
 def train_model(dataset, args):
+    print("Finetuning Model ...")
     data = dataset.to_pandas()
     data = data[['input_text', 'target_text']]
     dataset = Dataset.from_pandas(data)
@@ -160,12 +150,12 @@ def train_model(dataset, args):
     valid_dataset = train_test_split['train']
     test_dataset = train_test_split['test']
 
-    valid_dataset = valid_dataset.shuffle(seed=42).select(range(min(1000, len(valid_dataset))))
+    # valid_dataset = valid_dataset.shuffle(seed=42).select(range(min(500, len(valid_dataset))))
     test_dataset = test_dataset.shuffle(seed=42).select(range(min(1000, len(test_dataset))))
 
-    print(train_dataset)
-    print(valid_dataset)
-    print(test_dataset)
+    # print(train_dataset)
+    # print(valid_dataset)
+    # print(test_dataset)
 
     train_dataset = train_dataset.map(tokenize_function, batched=True, remove_columns=['input_text', 'target_text'])
     valid_dataset = valid_dataset.map(tokenize_function, batched=True, remove_columns=['input_text', 'target_text'])
@@ -199,13 +189,13 @@ def train_model(dataset, args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Pretrain Code-T5 Model on Code Search Net Dataset")
 
-    parser.add_argument('-e', '--epoch', type=int, default=1, help="Finetune Parameter: Epoch")
+    parser.add_argument('-e', '--epoch', type=int, default=3, help="Finetune Parameter: Epoch")
     parser.add_argument('-l', '--learning_rate', type=float, default=1e-4, help="Finetune Parameter: Learning Rate")
     parser.add_argument('-o', '--out', type=str, default="dataset_v2/generated/evaluation_finetune_results.csv", help="Finetune Parameter: Test Result Path")
 
     args = parser.parse_args()
 
-    dataset = get_dataset("10%:20%")
+    dataset = get_dataset("10%:25%")
     dataset = filter_dataset(dataset)
     dataset = mask_if_condition(dataset)
 
